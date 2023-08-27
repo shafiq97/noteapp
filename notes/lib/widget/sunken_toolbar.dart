@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:notes/model/storage/local_db.dart';
 import 'package:provider/provider.dart';
 
+import '../auth_state_manager.dart';
 import '../model/note/checklist.dart';
 import '../model/note/notifier/main_list.dart';
 import '../model/note/plaintext.dart';
@@ -35,6 +36,13 @@ class _SunkenToolbarState extends State<SunkenToolbar>
   late Color _checklistIconColor;
   late Color _plaintextIconColor;
   late Color _tapColor;
+
+  bool _isAuthenticatedForPrivate = false;
+
+  void setAuthenticatedForPrivate(bool value) {
+    var authState = Provider.of<AuthStateManager>(context, listen: false);
+    authState.setAuthenticatedForPrivate(value);
+  }
 
   @override
   void initState() {
@@ -109,69 +117,100 @@ class _SunkenToolbarState extends State<SunkenToolbar>
     );
   }
 
-  Widget buttonsColumn(AppTheme appTheme) => Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: IconButton(
-              onPressed: _onTapDownload,
-              icon: Icon(
-                Icons.download,
-                color: _exportIconColor,
+  Widget buttonsColumn(AppTheme appTheme) {
+    return Consumer<AuthStateManager>(
+      builder: (context, authState, child) {
+        return SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              if (authState.isAuthenticatedForPrivate) ...[
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: IconButton(
+                    onPressed: _onTapNewPrivateNote,
+                    icon: Icon(
+                      Icons.lock,
+                      color: _exportIconColor, // or another color
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: IconButton(
+                    onPressed: () => setAuthenticatedForPrivate(false),
+                    icon: Icon(
+                      Icons.private_connectivity,
+                      color: _exportIconColor, // or another color
+                    ),
+                  ),
+                ),
+                // Add more buttons for private notes
+              ],
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: IconButton(
+                  onPressed: _onTapDownload,
+                  icon: Icon(
+                    Icons.download,
+                    color: _exportIconColor,
+                  ),
+                ),
               ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: IconButton(
-              onPressed: _onTapOpenSettings,
-              icon: Icon(
-                Icons.settings_rounded,
-                color: appTheme.theme.secondaryColor,
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: IconButton(
+                  onPressed: _onTapOpenSettings,
+                  icon: Icon(
+                    Icons.settings_rounded,
+                    color: appTheme.theme.secondaryColor,
+                  ),
+                ),
               ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: IconButton(
-              onPressed: _onTapNewChecklist,
-              icon: Icon(
-                Icons.check_box_rounded,
-                color: _checklistIconColor,
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: IconButton(
+                  onPressed: _onTapNewChecklist,
+                  icon: Icon(
+                    Icons.check_box_rounded,
+                    color: _checklistIconColor,
+                  ),
+                ),
               ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: IconButton(
-              onPressed: _onTapNewPlainNote,
-              icon: Icon(
-                Icons.dehaze_rounded,
-                color: _plaintextIconColor,
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: IconButton(
+                  onPressed: _onTapNewPlainNote,
+                  icon: Icon(
+                    Icons.dehaze_rounded,
+                    color: _plaintextIconColor,
+                  ),
+                ),
               ),
-            ),
-          ),
-          Container(
-            width: _width * 0.6,
-            height: _height * 0.01,
-            decoration: BoxDecoration(
-              color: appTheme.theme.secondaryColor,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 15, bottom: 10),
-            child: IconButton(
-              onPressed: _onTapArrow,
-              icon: AnimatedRotation(
-                turns: _turns,
-                duration: const Duration(milliseconds: 250),
-                child: const Icon(Icons.keyboard_arrow_up_rounded),
+              Container(
+                width: _width * 0.6,
+                height: _height * 0.01,
+                decoration: BoxDecoration(
+                  color: appTheme.theme.secondaryColor,
+                ),
               ),
-            ),
+              Padding(
+                padding: const EdgeInsets.only(top: 15, bottom: 10),
+                child: IconButton(
+                  onPressed: _onTapArrow,
+                  icon: AnimatedRotation(
+                    turns: _turns,
+                    duration: const Duration(milliseconds: 250),
+                    child: const Icon(Icons.keyboard_arrow_up_rounded),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      );
+        );
+      },
+    );
+  }
 
   void _onTapArrow() {
     if (_controller.status != AnimationStatus.reverse &&
@@ -194,7 +233,11 @@ class _SunkenToolbarState extends State<SunkenToolbar>
 
   void _onTapNewPlainNote() {
     if (NotesList().notes.length < Values.maxNotes) {
-      IDProvider.getNextId().then((id) => NotesList().addNote(Plaintext(id)));
+      IDProvider.getNextId().then((id) {
+        Plaintext newNote = Plaintext(id, isPrivate: false);
+        NotesList().addNote(newNote);
+      });
+
       setState(() {
         _plaintextIconColor = _tapColor;
       });
@@ -261,6 +304,23 @@ class _SunkenToolbarState extends State<SunkenToolbar>
       content: Text('There already are too many notes!'),
     );
     ScaffoldMessenger.of(context).showSnackBar(snack);
+  }
+
+  void _onTapNewPrivateNote() {
+    if (NotesList().notes.length < Values.maxNotes) {
+      IDProvider.getNextId()
+          .then((id) => NotesList().addNote(Plaintext(id, isPrivate: true)));
+      setState(() {
+        _plaintextIconColor = _tapColor;
+      });
+      Future.delayed(
+          const Duration(milliseconds: 500),
+          () => setState(() {
+                _plaintextIconColor = AppTheme().theme.secondaryColor;
+              }));
+    } else {
+      showNotesFullSnackbar();
+    }
   }
 }
 

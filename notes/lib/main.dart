@@ -4,6 +4,7 @@ import 'package:notes/screen/loading.dart';
 import 'package:notes/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 
+import 'auth_state_manager.dart';
 import 'model/note/notifier/checklist_list.dart';
 import 'model/note/notifier/main_list.dart';
 
@@ -13,6 +14,7 @@ void main() {
       ChangeNotifierProvider(create: (_) => NotesList()),
       ChangeNotifierProvider(create: (_) => ChecklistManager()),
       ChangeNotifierProvider(create: (_) => AppTheme()),
+      ChangeNotifierProvider(create: (_) => AuthStateManager()),
     ],
     child: const MyApp(),
   ));

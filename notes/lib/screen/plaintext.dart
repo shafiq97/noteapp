@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../auth_state_manager.dart';
 import '../model/note/notifier/main_list.dart';
 import '../model/note/plaintext.dart';
 import '../theme/app_theme.dart';
@@ -28,6 +29,9 @@ class _PlaintextPageState extends State<PlaintextPage> {
     note = NotesList().getNoteWithID(widget.noteID) as Plaintext;
     _titleController.text = note.title;
     _bodyController.text = note.content;
+    // Update note's private status based on authentication
+    final authState = Provider.of<AuthStateManager>(context, listen: false);
+    note.isPrivate = authState.isAuthenticatedForPrivate;
   }
 
   @override
@@ -133,10 +137,14 @@ class _PlaintextPageState extends State<PlaintextPage> {
   }
 
   void _updateCallback() {
-    final modifiedNote = Plaintext(widget.noteID,
-        title: _titleController.text,
-        content: _bodyController.text,
-        pinned: NotesList().getNoteWithID(widget.noteID).pinned);
+    final authState = Provider.of<AuthStateManager>(context, listen: false);
+    final modifiedNote = Plaintext(
+      widget.noteID,
+      title: _titleController.text,
+      content: _bodyController.text,
+      pinned: NotesList().getNoteWithID(widget.noteID).pinned,
+      isPrivate: authState.isAuthenticatedForPrivate,
+    );
     NotesList().modifyNote(modifiedNote);
   }
 }

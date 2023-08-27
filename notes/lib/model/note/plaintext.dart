@@ -3,11 +3,16 @@ import 'note.dart';
 class Plaintext extends Note {
   String content;
 
-  Plaintext(id, {title = '', this.content = '', pinned = false})
+  bool isPrivate;
+
+  Plaintext(id,
+      {title = '', this.content = '', pinned = false, this.isPrivate = false})
       : super(id, title: title, pinned: pinned);
 
   Plaintext.fromJSON(Map<String, dynamic> json)
       : content = json['content'],
+        isPrivate = json['isPrivate'] ??
+            false, // assuming the key in JSON is 'isPrivate'
         super(json['id'] as int, title: json['title'], pinned: json['pinned']);
 
   @override
@@ -16,7 +21,8 @@ class Plaintext extends Note {
         'plain': true,
         'title': title,
         'content': content,
-        'pinned': pinned
+        'pinned': pinned,
+        'isPrivate': isPrivate
       };
 
   @override

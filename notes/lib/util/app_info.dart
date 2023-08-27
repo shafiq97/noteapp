@@ -9,10 +9,11 @@ class AppInfo {
   static const String appInfo3 =
       'The project is and always will be open-source and non-profit.';
 
-  static final Uri repoURL = Uri.parse('https://github.com/rovati/noteapp');
+  static final Uri repoURL =
+      Uri.parse('https://github.com/shafiq97/noteapp.git');
 
   static final Uri bugReportLink =
-      Uri.parse('https://github.com/rovati/noteapp/issues');
+      Uri.parse('https://github.com/shafiq97/noteapp.git/issues');
 
   static Future<String> get appVersion =>
       PackageInfo.fromPlatform().then((info) => info.version);

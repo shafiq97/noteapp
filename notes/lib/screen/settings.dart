@@ -65,7 +65,7 @@ class SettingsPage extends StatelessWidget {
                     padding: const EdgeInsets.only(top: 20),
                     child: RichText(
                       text: TextSpan(
-                        text: 'By Shafiq',
+                        text: 'By Danish',
                         style: TextStyle(
                             decoration: TextDecoration.underline,
                             color: appTheme.theme.secondaryColor),

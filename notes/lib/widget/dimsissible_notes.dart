@@ -125,16 +125,43 @@ class _DismissibleNotesState extends State<DismissibleNotes> {
     );
   }
 
-  void _onDismissDelete(DismissDirection dir, int noteID) {
+  void _onDismissDelete(DismissDirection dir, int noteID) async {
+    // Get the note to delete
     var note = NotesList().getNoteWithID(noteID);
-    NotesList().removeNote(noteID);
-    SnackBar snack = SnackBar(
-      content: const Text('Note deleted'),
-      action: SnackBarAction(
-        label: 'UNDO',
-        onPressed: () => NotesList().addNote(note),
-      ),
-    );
-    ScaffoldMessenger.of(context).showSnackBar(snack);
+
+    // Show confirmation dialog
+    bool confirmDelete = await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Confirm Delete'),
+              content: const Text('Are you sure you want to delete this note?'),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Delete'),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false; // if dialog returns null, consider as not confirmed
+
+    // If confirmed, delete the note and show a snack bar
+    if (confirmDelete) {
+      NotesList().removeNote(noteID);
+      SnackBar snack = SnackBar(
+        content: const Text('Note deleted'),
+        action: SnackBarAction(
+          label: 'UNDO',
+          onPressed: () => NotesList().addNote(note),
+        ),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(snack);
+    }
   }
 }

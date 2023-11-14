@@ -33,10 +33,10 @@ class AppThemeData {
     version2,
     alpsSunset,
     solarFlare,
-    flutter,
-    mint,
-    darkness,
-    neeck,
+    // flutter,
+    // mint,
+    // darkness,
+    // neeck,
   ];
 
   static final version2 = AppThemeData(
